@@ -105,11 +105,11 @@ def synthesize(piano, track, len_ratio=1):
     fs = piano.fs
     n = ceil(end * fs)
     out = np.zeros(n, dtype=np.float32)
-    # for m in tqdm(track):
-    for m in track:
+    for m in tqdm(track):
+    # for m in track:
         pitch = note2pitch(m['note'])
         note = piano.get_note(pitch, m['length'] * len_ratio)
-        print(note.shape[0])
+        # print(note.shape[0])
         st = floor(m['offset'] * fs)
         out[st:(st + note.shape[0])] += note
     return sequence(out, fs)
