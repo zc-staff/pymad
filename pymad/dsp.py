@@ -7,12 +7,12 @@ ifft = np.fft.ifft
 
 def repeat2(x, ratio, step=32, win_ratio=32):
     "change length but keep pitch"
-    # print('repeat2', ratio)
     step_ratio = ratio
 
     fs = x.fs
     win_len = ceil(step * win_ratio)
     step2 = ceil(step * step_ratio)
+    step_ratio = step2 / step
     n = x.shape[0]
     amp = np.sqrt(np.sum(x * x) / n)
     seg = max(0, ceil((n - win_len) / step))
@@ -52,7 +52,7 @@ def repeat2(x, ratio, step=32, win_ratio=32):
     
     amp1 = np.sqrt(np.sum(out * out) / m)
     out = out / amp1 * amp
-    mm = round(n * ratio)
+    mm = round(n * step_ratio)
     return sequence(out[:mm], fs)
 
 def box_smooth(x, w):
@@ -67,12 +67,13 @@ def preserve_peak(x, thres=0):
     x = x * (x > x_pad[2:]) * (x > x_pad[:-2])
     return x
 
-def find_pitch(x, thres=0.1, eps=1e-6):
+def find_pitch(x, thres=0.1, eps=1e-6, min_freq=50):
     "pitch finding using cepstrum method"
     fs = x.fs
     n = x.shape[0]
+    max_n = ceil(fs / min_freq)
     cp = cepstrum(x, thres, eps)
-    k = np.argmax(cp)
+    k = np.argmax(cp[:max_n])
     if k > n / 2:
         k = n - k
     return float(fs / k)

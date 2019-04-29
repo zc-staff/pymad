@@ -94,16 +94,22 @@ class PianoCache(object):
             self.cache[(pitch, length)] = self.parent.get_note(pitch, length)
         return self.cache[(pitch, length)]
 
-def synthesize(piano, track):
+def note2pitch(note):
+    return 440 * (2 ** ((note - 69) / 12))
+
+def synthesize(piano, track, len_ratio=1):
     end = 0
     for m in track:
-        ed = m['offset'] + m['length']
+        ed = m['offset'] + m['length'] * len_ratio
         end = max(end, ed)
     fs = piano.fs
     n = ceil(end * fs)
     out = np.zeros(n, dtype=np.float32)
-    for m in tqdm(track):
-        note = piano.get_note(m['pitch'], m['length'])
+    # for m in tqdm(track):
+    for m in track:
+        pitch = note2pitch(m['note'])
+        note = piano.get_note(pitch, m['length'] * len_ratio)
+        print(note.shape[0])
         st = floor(m['offset'] * fs)
-        out[st:(st + note.shape[0])] = note
+        out[st:(st + note.shape[0])] += note
     return sequence(out, fs)

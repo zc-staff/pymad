@@ -21,8 +21,8 @@ def dump_midi(midi, prefix, charset='utf-8'):
                 keys[ch] = dict()
             if m.type == 'note_off' or m.velocity == 0:
                 st = keys[ch][m.note]
-                pitch = 440 * (2 ** ((m.note - 69) / 12))
-                note = { "offset": st, "pitch": pitch, "length": now - st }
+                # pitch = 440 * (2 ** ((m.note - 69) / 12))
+                note = { "offset": st, "note": m.note, "length": now - st }
                 outs[ch].append(note)
                 keys[ch].pop(m.note)
             else:
