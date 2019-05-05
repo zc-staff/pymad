@@ -4,12 +4,17 @@ import numpy as np
 from .core import sequence
 from .dsp import repeat2, resample2, filter4, find_pitch
 
+def note2pitch(note):
+    return 440 * (2 ** ((note - 69) / 12))
+
 class SimplePiano(object):
-    def __init__(self, fs, phase=0):
+    def __init__(self, fs, phase=0, pitch_ratio=1):
         self.fs = fs
         self.phase = phase
+        self.pitch_ratio = pitch_ratio
 
-    def get_note(self, pitch, length):
+    def get_note(self, note, length):
+        pitch = note2pitch(note) * self.pitch_ratio
         n = ceil(length * self.fs)
         t = np.arange(n) / self.fs
         t = np.sin(2 * pi * pitch * t + self.phase)
@@ -17,12 +22,13 @@ class SimplePiano(object):
         return sequence(t, self.fs)
 
 class Piano(object):
-    def __init__(self, x, filter_ratio=4):
+    def __init__(self, x, filter_ratio=4, pitch_ratio=1):
         self.fs = x.fs
         self.data = { 0: x.clone() }
         self.length = x.shape[0] / x.fs
         self.pitch = find_pitch(x)
         self.filter_ratio = filter_ratio
+        self.pitch_ratio = pitch_ratio
     
     def upsample(self, n):
         k = 1 if n > 0 else -1
@@ -30,10 +36,10 @@ class Piano(object):
             if not i in self.data:
                 if k > 0:
                     y = repeat2(self.data[i - k], 2)
-                    y = resample2(self.data[i - k], 0.5)
+                    y = resample2(y, 0.5)
                 else:
                     y = resample2(self.data[i - k], 2)
-                    y = repeat2(self.data[i - k], 0.5)
+                    y = repeat2(y, 0.5)
                 self.data[i] = y
         return self.data[n].clone()
     
@@ -58,7 +64,8 @@ class Piano(object):
             x = resample2(x, 0.5)
         return x        
     
-    def get_note(self, pitch, length):
+    def get_note(self, note, length):
+        pitch = note2pitch(note) * self.pitch_ratio
         pit = pitch
         len = length
         pitch /= self.pitch
@@ -89,27 +96,30 @@ class PianoCache(object):
         self.parent = parent
         self.cache = dict()
     
-    def get_note(self, pitch, length):
-        if not (pitch, length) in self.cache:
-            self.cache[(pitch, length)] = self.parent.get_note(pitch, length)
-        return self.cache[(pitch, length)]
+    def get_note(self, note, length):
+        if not (note, length) in self.cache:
+            self.cache[(note, length)] = self.parent.get_note(note, length)
+        return self.cache[(note, length)]
 
-def note2pitch(note):
-    return 440 * (2 ** ((note - 69) / 12))
-
-def synthesize(piano, track, len_ratio=1):
-    end = 0
-    for m in track:
-        ed = m['offset'] + m['length'] * len_ratio
-        end = max(end, ed)
+def synthesize(piano, track, len_ratio=1, speed_ratio=1, vol_ratio=1):
     fs = piano.fs
-    n = ceil(end * fs)
-    out = np.zeros(n, dtype=np.float32)
+    notes = []
+    ed_max = 0
+
     for m in tqdm(track):
     # for m in track:
-        pitch = note2pitch(m['note'])
-        note = piano.get_note(pitch, m['length'] * len_ratio)
-        # print(note.shape[0])
-        st = floor(m['offset'] * fs)
-        out[st:(st + note.shape[0])] += note
+        st = m['offset'] * speed_ratio
+        le = m['length'] * len_ratio * speed_ratio
+        note = piano.get_note(m['note'], le)
+
+        st_idx = floor(st * fs)
+        ed_idx = st_idx + note.shape[0]
+        notes.append((st_idx, note))
+        ed_max = max(ed_idx, ed_max)
+    
+    out = np.zeros(ed_max, dtype=np.float32)
+
+    for st_idx, note in notes:
+        out[st_idx:(st_idx + note.shape[0])] += note * vol_ratio
+    
     return sequence(out, fs)

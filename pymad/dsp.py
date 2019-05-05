@@ -1,4 +1,4 @@
-from math import floor, ceil, pi
+from math import floor, ceil, pi, log2
 from .core import sequence
 import numpy as np
 
@@ -7,16 +7,17 @@ ifft = np.fft.ifft
 
 def repeat2(x, ratio, step=32, win_ratio=32):
     "change length but keep pitch"
-    step_ratio = ratio
-
+    n = x.shape[0]
+    mm = ceil(ratio * n)
     fs = x.fs
     win_len = ceil(step * win_ratio)
-    step2 = ceil(step * step_ratio)
-    step_ratio = step2 / step
-    n = x.shape[0]
-    amp = np.sqrt(np.sum(x * x) / n)
+
     seg = max(0, ceil((n - win_len) / step))
-    x = np.concatenate((x, np.zeros(win_len + seg * step - n)))
+    step2 = max(0, ceil((mm - win_len) / seg))
+    step_ratio = step2 / step
+
+    amp = np.sqrt(np.sum(x * x) / n)
+    x = np.pad(x, ((0, win_len + seg * step - n)), mode='constant')
 
     m = win_len + seg * step2
     out = np.zeros(m)
@@ -44,7 +45,7 @@ def repeat2(x, ratio, step=32, win_ratio=32):
 
         phase1 += delta
         fq = fq * np.exp(1j * phase1)
-        syns = win * np.real(ifft(fq))
+        syns = np.real(ifft(fq))
 
         st1 = i * step2
         ed1 = st1 + win_len
@@ -52,7 +53,6 @@ def repeat2(x, ratio, step=32, win_ratio=32):
     
     amp1 = np.sqrt(np.sum(out * out) / m)
     out = out / amp1 * amp
-    mm = round(n * step_ratio)
     return sequence(out[:mm], fs)
 
 def box_smooth(x, w):
@@ -88,40 +88,52 @@ def cepstrum(x, thres=0.1, eps=1e-6):
     sy = preserve_peak(sy)
     return sy
 
+def next_pow2(n):
+    return int(2 ** ceil(log2(n)))
+
+def pad_to(x, n):
+    return np.pad(x, ((0, n - x.shape[0])), mode='constant')
+
 def resample2(x, ratio):
     "change both length and pitch"
     fs = x.fs
     n = x.shape[0]
-    t = floor((n - 1) / 2)
-    t1 = ceil(t * ratio)
+    nn = next_pow2(n)
+    x = pad_to(x, nn)
     fq = fft(x)
-    fq1 = np.zeros(2 * t1 + 1, dtype=np.complex)
-    fq1[0] = fq[0] * ratio
 
-    tt = min(t, t1)
-    fq1[1:(1 + tt)] = fq[1:(1 + tt)] * ratio
-    fq1[(2 * t1):t1:-1] = np.conj(fq1[1:(1 + t1)])
+    m = ceil(n * ratio)
+    mm = next_pow2(m)
+    fq1 = np.zeros(mm, dtype=np.complex)
+
+    n1 = nn // 2 + 1
+    m1 = mm // 2 + 1
+    tp = np.arange(n1) / nn
+    xp = fq[:n1]
+    t = np.arange(m1) / mm * ratio
+    fq1[:m1] = ratio * np.interp(t, tp, xp, right=0)
+    fq1[m1:mm] = np.conj(fq1[(mm - m1):0:-1])
 
     o = np.real(ifft(fq1))
-    return sequence(o, fs)
+    return sequence(o[:m], fs)
 
 def filter4(x, pitch, ratio=4, max_freq=5000):
     "a comb filter, also a low pass filter to cut at max_freq"
     fs = x.fs
     n = x.shape[0]
-    t = ceil((n + 1) / 2)
+    nn = next_pow2(n)
+    n1 = nn // 2 + 1
+    x = pad_to(x, nn)
 
-    idx = pitch / fs * n
-    tt = np.arange(1, t) / idx
+    idx = pitch / fs * nn
+    tt = np.arange(n1) / idx
     tr = np.maximum(1, np.round(tt))
     tr = np.minimum(ceil(max_freq / pitch), tr)
     tt -= tr
     tt = np.maximum(0, 1 - (tt * ratio) ** 2)
 
-    f1 = np.zeros(n)
-    f1[1:t] = tt
-    f1[t:n] = np.conj(f1[(n - t):0:-1])
+    tt = pad_to(tt, nn)
+    tt[n1:nn] = np.conj(tt[(nn - n1):0:-1])
 
-    f0 = fft(x)
-    return sequence(np.real(ifft(f0 * f1)), fs)
-
+    o = np.real(ifft(tt * fft(x)))
+    return sequence(o[:n], fs)
