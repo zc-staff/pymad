@@ -1,7 +1,7 @@
 from math import log2, floor, ceil, pi
 from tqdm import tqdm
 import numpy as np
-from .core import sequence
+from .core import sequence, readWav
 from .dsp import repeat2, resample2, filter4, find_pitch
 
 def note2pitch(note):
@@ -89,6 +89,24 @@ class Piano(object):
         nn = ceil(self.fs * len)
         x = filter4(x[:nn], pit, ratio=self.filter_ratio)
         return x
+
+class Drum(object):
+    def __init__(self, beats):
+        self.fs = 44100
+        for _, v in beats.items():
+            self.fs = v.fs
+            break
+        self.beats = beats
+    
+    def get_note(self, note, length):
+        return self.beats[note]
+
+def load_drum(beatsFile):
+    beats = dict()
+    for k, v in beatsFile.items():
+        t = readWav(v)
+        beats[k] = t
+    return Drum(beats)
 
 class PianoCache(object):
     def __init__(self, parent):
