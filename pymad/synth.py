@@ -119,12 +119,14 @@ class PianoCache(object):
             self.cache[(note, length)] = self.parent.get_note(note, length)
         return self.cache[(note, length)]
 
-def synthesize(piano, track, len_ratio=1, speed_ratio=1, vol_ratio=1):
+def synthesize(piano, track, len_ratio=1, speed_ratio=1, vol_ratio=1, quiet=False):
     fs = piano.fs
     notes = []
     ed_max = 0
+    if not quiet:
+        track = tqdm(track)
 
-    for m in tqdm(track):
+    for m in track:
     # for m in track:
         st = m['offset'] * speed_ratio
         le = m['length'] * len_ratio * speed_ratio
