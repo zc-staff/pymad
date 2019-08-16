@@ -25,6 +25,18 @@ def pad(s, chs, ch=' '):
 def lockRange(x, a, b):
     return max(min(x, b), a)
 
+def isLow(x):
+    return x > 96
+
+def toLow(x):
+    if isLow(x):
+        return x
+    else:
+        return x + 32
+
+def upScale(x, s):
+    return 1 if isLow(x) else s
+
 class Editor(object):
     def __init__(self, scr):
         self.scr = scr
@@ -55,6 +67,7 @@ class Editor(object):
     def drawNote(self):
         self.redraw = True
         lines = self.size[0] - YOFFSET - 1
+        self.yoffset = lockRange(self.yoffset, lines - 1, 128)
         for i in range(lines):
             self.scr.addstr(YOFFSET + i, 0, ' ' * NOTEOFFSET)
             label = note2name(self.yoffset - i)
@@ -65,6 +78,8 @@ class Editor(object):
     
     def drawTimeline(self):
         self.redraw = True
+        self.xoffset = max(0, self.xoffset)
+
         chs = self.size[1] - NOTEOFFSET
         sc = self.bar * self.scale
         st = ceil(self.xoffset / sc) * sc - self.xoffset
@@ -99,8 +114,14 @@ class Editor(object):
             ed = lockRange(ed, 0, chs - 1)
             nt = self.yoffset - n['note']
             if ed - st > 0 and nt >= 0 and nt < lines:
-                self.scr.addstr(YOFFSET + nt, NOTEOFFSET + st, '█' * (ed - st - 1))
-                self.scr.addstr(YOFFSET + nt, NOTEOFFSET + ed - 1, '▊')
+                if n.get('selected', False):
+                    color = curses.color_pair(1)
+                else:
+                    color = curses.color_pair(0)
+                self.scr.addstr(YOFFSET + nt, NOTEOFFSET + st, '█' * (ed - st - 1),
+                    color)
+                self.scr.addstr(YOFFSET + nt, NOTEOFFSET + ed - 1, '▊',
+                    color)
     
     def drawInput(self):
         self.redraw = True
@@ -127,13 +148,18 @@ class Editor(object):
         self.redraw = False
     
     def scoreInHash(self):
-        return { 'bpm': self.bpm, 'bar': self.bar, 'notes': self.notes }
+        return { 'bpm': self.bpm, 'bar': self.bar, 'notes':
+            list(map(lambda x: {
+                'offset': x['offset'],
+                'note': x['note'],
+                'length': x['length'],
+            }, self.notes))}
 
     def trackInHash(self):
-        return list(map(lambda x : {
+        return list(map(lambda x: {
             'offset': beat2time(self.bpm, x['offset']),
             'note': x['note'],
-            'length': beat2time(self.bpm, x['length'])
+            'length': beat2time(self.bpm, x['length']),
         }, self.notes))
     
     def saveScore(self, args, track=False):
@@ -150,6 +176,14 @@ class Editor(object):
                     t = self.scoreInHash()
                 json.dump(t, fp, indent=2)
             self.message = 'written to ' + p
+    
+    def findNote(self):
+        t = None
+        for n in self.notes:
+            xcur = self.xcur / self.scale
+            if n['note'] == self.ycur and n['offset'] <= xcur and n['offset'] + n['length'] >= xcur:
+                t = n
+        return t
     
     def onCommand(self):
         args = self.input[1:].split()
@@ -168,6 +202,7 @@ class Editor(object):
             self.message = 'unknown command'
     
     def onKey(self):
+        skip = self.scale if self.showBeat else self.scale * self.bar
         key = self.scr.getch()
         if key == -1:
             self.size = self.scr.getmaxyx()
@@ -188,21 +223,18 @@ class Editor(object):
         elif key == ord(':'):
             self.input = ':'
             self.drawInput()
-        elif key == ord('j'):
-            if self.xoffset > 0:
-                self.xoffset -= 1
+        elif toLow(key) == ord('j'):
+            self.xoffset -= upScale(key, skip)
             self.drawTimeline()
-        elif key == ord('l'):
-            self.xoffset += 1
+        elif toLow(key) == ord('l'):
+            self.xoffset += upScale(key, skip)
             self.drawTimeline()
-        elif key == ord('i'):
-            if self.yoffset < 128:
-                self.yoffset += 1
+        elif toLow(key) == ord('i'):
+            self.yoffset += upScale(key, len(NOTES))
             self.drawNote()
             self.drawTimeline()
-        elif key == ord('k'):
-            if self.yoffset > 0:
-                self.yoffset -=1
+        elif toLow(key) == ord('k'):
+            self.yoffset -= upScale(key, len(NOTES))
             self.drawNote()
             self.drawTimeline()
         elif key == ord('u'):
@@ -219,27 +251,47 @@ class Editor(object):
         elif key == ord('\\'):
             self.showBeat = not self.showBeat
             self.drawTimeline()
-        elif key == ord('a'):
-            self.xcur -= 1
+        elif toLow(key) == ord('a'):
+            self.xcur -= upScale(key, skip)
             self.drawTimeline()
-        elif key == ord('d'):
-            self.xcur += 1
+        elif toLow(key) == ord('d'):
+            self.xcur += upScale(key, skip)
             self.drawTimeline()
-        elif key == ord('w'):
-            self.ycur += 1
+        elif toLow(key) == ord('w'):
+            self.ycur += upScale(key, len(NOTES))
             self.drawNote()
-        elif key == ord('s'):
-            self.ycur -= 1
+        elif toLow(key) == ord('s'):
+            self.ycur -= upScale(key, len(NOTES))
             self.drawNote()
-        elif key == ord('q'):
+        elif toLow(key) == ord('q'):
             self.notes.append({
                 'offset': self.xcur / self.scale,
                 'length': self.lastWrite,
                 'note': self.ycur,
+                'selected': key == ord('Q'),
             })
             self.drawTimeline()
+        elif key == 9:
+            t = self.findNote()
+            if t != None:
+                t['selected'] = not t.get('selected', False)
+            self.drawTimeline()
+        elif key == 353:
+            for n in self.notes:
+                n['selected'] = False
+            self.drawTimeline()
+        elif key == ord('r'):
+            t = self.findNote()
+            if t != None:
+                self.notes.remove(t)
+            self.drawTimeline()
+        elif key == ord('R'):
+            self.notes[:] = filter(lambda x: not x.get('selected', False), self.notes)
+            self.drawTimeline()
+
 
 def main(scr):
+    curses.init_pair(1, curses.COLOR_BLUE, curses.COLOR_BLACK)
     editor = Editor(scr)
     editor.drawEverything()
     while not editor.quit:
