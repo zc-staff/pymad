@@ -20,7 +20,7 @@ if __name__ == "__main__":
         piano = BasicPiano(44100, mode=args.basic)
     else:
         x = readWav(args.sampler)
-        piano = Sampler(x, filter_ratio=args.filter, pitch_ratio=2 ** (args.pitch / 12))
+        piano = Sampler(x, pitch_ratio=2 ** (args.pitch / 12))
     piano = PianoCache(piano)
     t = load_track(args.track)
     seq = synthesize(piano, t, len_ratio=args.length, speed_ratio=args.speed, vol_ratio=10 ** (args.volume / 10), quiet=args.quiet)
