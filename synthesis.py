@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
-from pymad import readWav, Piano, PianoCache, synthesize, load_track
+from pymad import readWav, synthesize, load_track
+from pymad.piano import Sampler, PianoCache
 
 if __name__ == "__main__":
     parser = ArgumentParser("synthesis", description="synthesis track")
@@ -15,7 +16,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     x = readWav(args.source)
-    piano = PianoCache(Piano(x, filter_ratio=args.filter, pitch_ratio=2 ** (args.pitch / 12)))
+    piano = PianoCache(Sampler(x, filter_ratio=args.filter, pitch_ratio=2 ** (args.pitch / 12)))
     t = load_track(args.track)
     seq = synthesize(piano, t, len_ratio=args.length, speed_ratio=args.speed, vol_ratio=10 ** (args.volume / 10), quiet=args.quiet)
     seq.writeWav(args.output)
