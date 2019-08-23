@@ -4,15 +4,18 @@ from mido import MidiFile
 def dump_midi(midi, prefix, charset='utf-8'):
     midi = MidiFile(midi, charset=charset)
     tempo = 500000
+    bar = 4
 
     for idx, t in enumerate(midi.tracks):
         outs = dict()
         keys = dict()
-        now = 0
+        now = 0.0
         for m in t:
-            now += m.time * tempo / midi.ticks_per_beat / 1000000
+            now += m.time / midi.ticks_per_beat
             if m.type == 'set_tempo':
                 tempo = m.tempo
+            elif m.type == 'time_signature':
+                bar = m.numerator
             if m.type != 'note_on' and m.type != 'note_off':
                 continue
             ch = m.channel
@@ -30,7 +33,10 @@ def dump_midi(midi, prefix, charset='utf-8'):
         for ch, v in outs.items():
             path = prefix + '-' + str(idx) + '-' + str(ch) + '.json'
             with open(path, 'w') as f:
-                json.dump(v, f, indent=2)
+                json.dump({
+                    'bpm': 60000000.0 / tempo,
+                    'bar': bar, 'notes': v
+                }, f, indent=2)
 
 def load_track(path):
     with open(path, 'r') as f:

@@ -7,4 +7,4 @@ if __name__ == "__main__":
     parser.add_argument('prefix', help='destination prefix to store json')
 
     args = parser.parse_args()
-    dump_midi(args.source, args.prefix)
+    dump_midi(args.midi, args.prefix)

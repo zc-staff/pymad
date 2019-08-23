@@ -123,10 +123,12 @@ def synthesize(piano, track, len_ratio=1, speed_ratio=1, vol_ratio=1, quiet=Fals
     fs = piano.fs
     notes = []
     ed_max = 0
+    notes = track['notes']
     if not quiet:
-        track = tqdm(track)
+        notes = tqdm(notes)
+    speed_ratio *= 60 / track['bpm']
 
-    for m in track:
+    for m in notes:
     # for m in track:
         st = m['offset'] * speed_ratio
         le = m['length'] * len_ratio * speed_ratio
