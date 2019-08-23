@@ -3,17 +3,28 @@ from math import ceil, pi
 from . import note2pitch
 from ..core import sequence, readWav
 
-class SimplePiano(object):
-    def __init__(self, fs, phase=0, pitch_ratio=1):
+class BasicPiano(object):
+    def __init__(self, fs, phase=0, pitch_ratio=1, mode='sin'):
         self.fs = fs
         self.phase = phase
         self.pitch_ratio = pitch_ratio
+        self.mode = mode
 
     def get_note(self, note, length):
         pitch = note2pitch(note) * self.pitch_ratio
         n = ceil(length * self.fs)
-        t = np.arange(n) / self.fs
-        t = np.sin(2 * pi * pitch * t + self.phase)
+        t = np.arange(n) / self.fs * pitch + self.phase
+        t = t - np.floor(t)
+        if self.mode == 'sin':
+            t = np.sin(2 * pi * t - pi / 2)
+        elif self.mode == 'square':
+            t = np.sign(t - 0.5)
+        elif self.mode == 'sawtooth':
+            t = 2.0 * t - 1.0
+        elif self.mode == 'triangle':
+            t = 1.0 - 4.0 * np.abs(t - 0.5)
+        else:
+            raise NotImplementedError()
         t *= np.hamming(n)
         return sequence(t, self.fs)
 
