@@ -45,15 +45,15 @@ class Editor(object):
     def __init__(self, scr):
         self.scr = scr
         # how many characters per beat
-        self.scale = 8
+        self.scale = 6
         # offset in character
         self.xoffset = 0
-        # note of the first line
-        self.yoffset = C + len(NOTES)
-        # how many beats per bar
-        self.bar = 4
         # window size in (height, width)
         self.size = scr.getmaxyx()
+        # note of the first line
+        self.yoffset = C + (self.size[0] - YOFFSET - 1) // 2
+        # how many beats per bar
+        self.bar = 4
         self.number = False
         self.redraw = False
         self.input = ''
@@ -288,16 +288,24 @@ class Editor(object):
             self.yoffset -= upScale(key, len(NOTES))
             self.drawNote()
             self.drawTimeline()
-        elif key == ord('u'):
+        elif toLow(key) == ord('u'):
             if self.scale > 1:
-                self.scale = self.scale // 2
-                self.xoffset = self.xoffset // 2
-                self.xcur = self.xcur // 2
+                old = self.scale
+                if isLow(key):
+                    self.scale = self.scale // 2
+                else:
+                    self.scale -= 1
+                self.xoffset = self.xoffset * self.scale // old
+                self.xcur = self.xcur * self.scale // old
             self.drawTimeline()
-        elif key == ord('o'):
-            self.scale = self.scale * 2
-            self.xoffset = self.xoffset * 2
-            self.xcur = self.xcur * 2
+        elif toLow(key) == ord('o'):
+            old = self.scale
+            if isLow(key):
+                self.scale = self.scale * 2
+            else:
+                self.scale = self.scale + 1
+            self.xoffset = self.xoffset * self.scale // old
+            self.xcur = self.xcur * self.scale // old
             self.drawTimeline()
         elif key == ord('\\'):
             self.showBeat = not self.showBeat
