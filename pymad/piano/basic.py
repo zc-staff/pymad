@@ -1,10 +1,12 @@
 import numpy as np
 from math import ceil, pi
 from . import note2pitch
+from .asdr import LinearASDR
 from ..core import sequence, readWav
 
 class BasicPiano(object):
-    def __init__(self, fs, phase=0, pitch_ratio=1, mode='sin'):
+    def __init__(self, fs, phase=0, pitch_ratio=1, mode='sin', asdr=LinearASDR):
+        self.asdr = asdr(fs)
         self.fs = fs
         self.phase = phase
         self.pitch_ratio = pitch_ratio
@@ -12,7 +14,8 @@ class BasicPiano(object):
 
     def get_note(self, note, length):
         pitch = note2pitch(note) * self.pitch_ratio
-        n = ceil(length * self.fs)
+        env = self.asdr.getEnvelope(ceil(self.fs * length))
+        n = env.shape[0]
         t = np.arange(n) / self.fs * pitch + self.phase
         t = t - np.floor(t)
         if self.mode == 'sin':
@@ -25,7 +28,7 @@ class BasicPiano(object):
             t = 1.0 - 4.0 * np.abs(t - 0.5)
         else:
             raise NotImplementedError()
-        t *= np.hamming(n)
+        t *= env
         return sequence(t, self.fs)
 
 class Drum(object):

@@ -2,9 +2,9 @@ from math import ceil, floor
 import json
 import curses
 
-# C4 = 64, same as midi
+# C4 = 60, same as midi
 NOTES = [ 'C ', 'C#', 'D ', 'D#', 'E ', 'F ', 'F#', 'G ', 'G#', 'A ', 'A#', 'B ' ]
-C = 64
+C = 60
 CENTER = 4
 
 NOTEOFFSET = 8
@@ -21,6 +21,8 @@ def beat2time(bpm, beat):
     return beat * 60.0 / bpm
 
 def padOrTrunc(s, chs, ch=' '):
+    if s == None:
+        return ch * chs
     if chs > len(s):
         return s + ch * (chs - len(s))
     else:
@@ -85,9 +87,8 @@ class Editor(object):
     def drawHead(self):
         self.redraw = True
         chs = self.size[1] - NOTEOFFSET
-        if self.savePath != None:
-            lin1 = padOrTrunc(self.savePath, chs)
-            self.scr.addstr(0, NOTEOFFSET, lin1)
+        lin1 = padOrTrunc(self.savePath, chs)
+        self.scr.addstr(0, NOTEOFFSET, lin1)
         lin2 = padOrTrunc('bpm={}, beats={}, scale={}, nextLen={}, notes={}, selected={}, yanked={}'
             .format(self.bpm, self.bar, self.scale,
                     self.lastNote['length'], len(self.notes),
@@ -157,6 +158,7 @@ class Editor(object):
         self.cursor = len(line)
     
     def drawEverything(self):
+        self.drawHead()
         self.drawNote()
         self.drawTimeline()
         self.drawInput()
@@ -235,6 +237,10 @@ class Editor(object):
                 self.message = 'no load path given'
             else:
                 self.loadScore(args[1])
+        elif cmd == 'n':
+            self.savePath = None
+            self.notes.clear()
+            self.drawEverything()
         elif cmd == 'bpm':
             if len(args) < 2:
                 self.message = 'no bpm given'
@@ -337,8 +343,13 @@ class Editor(object):
                 t['selected'] = not t.get('selected', False)
             self.drawTimeline()
         elif key == 353:
+            tf = False
             for n in self.notes:
-                n['selected'] = False
+                if n.get('selected', False):
+                    tf = True
+                    break
+            for n in self.notes:
+                n['selected'] = not tf
             self.drawTimeline()
         elif key == ord('r'):
             t = self.findNote()
