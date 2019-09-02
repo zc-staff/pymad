@@ -37,6 +37,7 @@ class Drum(object):
         for _, v in beats.items():
             self.fs = v.fs
             break
+        print(self.fs)
         self.beats = beats
     
     def get_note(self, note, length):

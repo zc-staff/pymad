@@ -16,11 +16,12 @@ if __name__ == "__main__":
     gp.add_argument("--basic", type=str, help="use a basic synthesizer", choices=['sin', 'square', 'sawtooth', 'triangle'], default=None)
     args = parser.parse_args()
 
+    pitch = 2 ** (args.pitch / 12)
     if args.sampler == None:
-        piano = BasicPiano(44100, mode=args.basic)
+        piano = BasicPiano(44100, mode=args.basic, pitch_ratio=pitch)
     else:
         x = readWav(args.sampler)
-        piano = Sampler(x, pitch_ratio=2 ** (args.pitch / 12))
+        piano = Sampler(x, pitch_ratio=pitch)
     piano = PianoCache(piano)
     t = load_track(args.track)
     seq = synthesize(piano, t, len_ratio=args.length, speed_ratio=args.speed, vol_ratio=10 ** (args.volume / 10), quiet=args.quiet)

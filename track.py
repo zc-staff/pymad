@@ -89,7 +89,7 @@ class Editor(object):
         chs = self.size[1] - NOTEOFFSET
         lin1 = padOrTrunc(self.savePath, chs)
         self.scr.addstr(0, NOTEOFFSET, lin1)
-        lin2 = padOrTrunc('bpm={}, beats={}, scale={}, nextLen={}, notes={}, selected={}, yanked={}'
+        lin2 = padOrTrunc('bpm={}, beats={}, scale={}, nextLen={:.2f}, notes={}, selected={}, yanked={}'
             .format(self.bpm, self.bar, self.scale,
                     self.lastNote['length'], len(self.notes),
                     len(list(filter(lambda x: x.get('selected', False), self.notes))),
@@ -203,13 +203,26 @@ class Editor(object):
             self.message = 'written to ' + p
         self.drawHead()
     
-    def findNote(self):
-        t = None
-        for n in self.notes:
-            xcur = self.xcur / self.scale
-            if n['note'] == self.ycur and n['offset'] <= xcur and n['offset'] + n['length'] > xcur:
-                t = n
-        return t
+    def noteInCur(self, n):
+        st = floor((n['offset'] + EPS) * self.scale)
+        ed = ceil(((n['offset'] - EPS) + n['length']) * self.scale)
+        return st <= self.xcur and ed > self.xcur
+    
+    def findNotes(self, f, solo=False):
+        ff = list(filter(f, self.notes))
+        if solo:
+            ff = ff[-1:]
+        return ff
+
+    def selectNotes(self, f, solo=False):
+        ff = self.findNotes(f, solo)
+        tf = False
+        for n in ff:
+            if n.get('selected', False):
+                tf = True
+                break
+        for n in ff:
+            n['selected'] = not tf
 
     def loadScore(self, path):
         with open(path, 'r') as fp:
@@ -338,23 +351,21 @@ class Editor(object):
             self.notes.append(self.lastNote)
             self.drawTimeline()
         elif key == 9:
-            t = self.findNote()
-            if t != None:
-                t['selected'] = not t.get('selected', False)
+            self.selectNotes(lambda n: self.noteInCur(n) and n['note'] == self.ycur, solo=True)
             self.drawTimeline()
         elif key == 353:
-            tf = False
-            for n in self.notes:
-                if n.get('selected', False):
-                    tf = True
-                    break
-            for n in self.notes:
-                n['selected'] = not tf
+            self.selectNotes(lambda n: True)
+            self.drawTimeline()
+        elif key == ord('`'):
+            self.selectNotes(self.noteInCur)
+            self.drawTimeline()
+        elif key == ord('~'):
+            self.selectNotes(lambda n: n['note'] == self.ycur)
             self.drawTimeline()
         elif key == ord('r'):
-            t = self.findNote()
-            if t != None:
-                self.notes.remove(t)
+            t = self.findNotes(lambda n: self.noteInCur(n) and n['note'] == self.ycur, solo=True)
+            if len(t) > 0:
+                self.notes.remove(t[0])
             self.drawTimeline()
         elif key == ord('R'):
             self.notes[:] = filter(lambda x: not x.get('selected', False), self.notes)
