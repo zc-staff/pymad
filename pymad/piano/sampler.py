@@ -1,13 +1,13 @@
-from math import ceil, log2
+from math import log2
 from . import note2pitch
-from ..dsp import find_pitch, repeat2, resample2, filter4
+from ..dsp import findPitch, repeat2, resample2, filter4
 
 class Sampler(object):
     def __init__(self, x, filter_ratio=4, pitch_ratio=1):
         self.fs = x.fs
         self.data = { 0: x.clone() }
         self.length = x.shape[0] / x.fs
-        self.pitch = find_pitch(x)
+        self.pitch = findPitch(x)
         self.filter_ratio = filter_ratio
         self.pitch_ratio = pitch_ratio
     
@@ -48,7 +48,7 @@ class Sampler(object):
     def get_note(self, note, length):
         pitch = note2pitch(note) * self.pitch_ratio
         pit = pitch
-        len = length
+        len0 = length
         pitch /= self.pitch
         length /= self.length
         ii = length * pitch
@@ -67,6 +67,6 @@ class Sampler(object):
             x = repeat2(x, ii)
         if jj < 1:
             x = resample2(x, jj)
-        nn = ceil(self.fs * len)
+        nn = round(self.fs * len0)
         x = filter4(x[:nn], pit, ratio=self.filter_ratio)
         return x

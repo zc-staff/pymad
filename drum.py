@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
-from pymad import load_track, synthesize
-from pymad.piano import load_drum
+from pymad import loadTrack, synthesize
+from pymad.piano import loadDrum
 
 if __name__ == "__main__":
     parser = ArgumentParser("drum", description="synthesis drum track")
@@ -15,9 +15,9 @@ if __name__ == "__main__":
     drums = {}
     for o in args.orchestra:
         drums[int(o[0])] = o[1]
-    drum = load_drum(drums)
-    t = load_track(args.track)
+    drum = loadDrum(drums)
+    t = loadTrack(args.track)
 
-    seq = synthesize(drum, t, speed_ratio=args.speed, vol_ratio=10 ** (args.volume / 10), quiet=args.quiet)
+    seq = synthesize(drum, t, speedRatio=args.speed, volRatio=10 ** (args.volume / 10), quiet=args.quiet)
     seq.writeWav(args.output)
 

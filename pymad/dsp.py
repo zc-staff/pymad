@@ -55,11 +55,11 @@ def repeat2(x, ratio, step=32, win_ratio=32):
     out = out / amp1 * amp
     return sequence(out[:mm], fs)
 
-def box_smooth(x, w):
+def boxSmooth(x, w):
     box = np.ones(w, dtype=np.float32) / w
     return np.convolve(x, box, mode='same')
 
-def preserve_peak(x, thres=0):
+def preservePeak(x, thres=0):
     "preserve only local max, x must be non-negative, also suppress < thres * max_x"
     max_x = np.max(x)
     x = x * (x > thres * max_x)
@@ -67,7 +67,7 @@ def preserve_peak(x, thres=0):
     x = x * (x > x_pad[2:]) * (x > x_pad[:-2])
     return x
 
-def find_pitch(x, thres=0.1, eps=1e-6, min_freq=50):
+def findPitch(x, thres=0.1, eps=1e-6, min_freq=50):
     "pitch finding using cepstrum method"
     fs = x.fs
     n = x.shape[0]
@@ -81,14 +81,14 @@ def find_pitch(x, thres=0.1, eps=1e-6, min_freq=50):
 def cepstrum(x, thres=0.1, eps=1e-6):
     # mag spectrum
     sy = np.abs(fft(x))
-    sy = preserve_peak(sy, thres=thres)
+    sy = preservePeak(sy, thres=thres)
     sy = np.log(sy + eps)
     # cepstrum
     sy = np.abs(ifft(sy))
-    sy = preserve_peak(sy)
+    sy = preservePeak(sy)
     return sy
 
-def next_pow2(n):
+def nextPow2(n):
     return int(2 ** ceil(log2(n)))
 
 def pad_to(x, n):
@@ -98,12 +98,12 @@ def resample2(x, ratio):
     "change both length and pitch"
     fs = x.fs
     n = x.shape[0]
-    nn = next_pow2(n)
+    nn = nextPow2(n)
     x = pad_to(x, nn)
     fq = fft(x)
 
     m = ceil(n * ratio)
-    mm = next_pow2(m)
+    mm = nextPow2(m)
     fq1 = np.zeros(mm, dtype=np.complex)
 
     n1 = nn // 2 + 1
@@ -121,7 +121,7 @@ def filter4(x, pitch, ratio=4, max_freq=5000):
     "a comb filter, also a low pass filter to cut at max_freq"
     fs = x.fs
     n = x.shape[0]
-    nn = next_pow2(n)
+    nn = nextPow2(n)
     n1 = nn // 2 + 1
     x = pad_to(x, nn)
 

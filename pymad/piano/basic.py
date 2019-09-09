@@ -1,21 +1,19 @@
 import numpy as np
-from math import ceil, pi
+from math import pi
 from . import note2pitch
 from .asdr import LinearASDR
 from ..core import sequence, readWav
 
 class BasicPiano(object):
-    def __init__(self, fs, phase=0, pitch_ratio=1, mode='sin', asdr=LinearASDR):
-        self.asdr = asdr(fs)
+    def __init__(self, fs, phase=0, pitch_ratio=1, mode='sin'):
         self.fs = fs
         self.phase = phase
         self.pitch_ratio = pitch_ratio
         self.mode = mode
 
-    def get_note(self, note, length):
+    def getNote(self, note, length):
         pitch = note2pitch(note) * self.pitch_ratio
-        env = self.asdr.getEnvelope(ceil(self.fs * length))
-        n = env.shape[0]
+        n = round(length * self.fs)
         t = np.arange(n) / self.fs * pitch + self.phase
         t = t - np.floor(t)
         if self.mode == 'sin':
@@ -28,27 +26,24 @@ class BasicPiano(object):
             t = 1.0 - 4.0 * np.abs(t - 0.5)
         else:
             raise NotImplementedError()
-        t *= env
         return sequence(t, self.fs)
 
 class Drum(object):
-    def __init__(self, beats):
+    def __init__(self, fs, beats):
         self.fs = 44100
-        for _, v in beats.items():
-            self.fs = v.fs
-            break
-        print(self.fs)
         self.beats = beats
     
-    def get_note(self, note, length):
+    def getNote(self, note, length):
         return self.beats[note]
 
-def load_drum(beatsFile):
+def loadDrum(beatsFile):
     beats = dict()
+    fs = 44100
     for k, v in beatsFile.items():
         t = readWav(v)
+        fs = t.fs
         beats[k] = t
-    return Drum(beats)
+    return Drum(fs, beats)
 
 class PianoCache(object):
     def __init__(self, parent):
@@ -56,7 +51,7 @@ class PianoCache(object):
         self.parent = parent
         self.cache = dict()
     
-    def get_note(self, note, length):
+    def getNote(self, note, length):
         if not (note, length) in self.cache:
             self.cache[(note, length)] = self.parent.get_note(note, length)
         return self.cache[(note, length)]

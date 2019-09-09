@@ -1,7 +1,7 @@
 import json
 from mido import MidiFile
 
-def dump_midi(midi, prefix, charset='utf-8'):
+def dumpMidi(midi, prefix, charset='utf-8'):
     midi = MidiFile(midi, charset=charset)
     tempo = 500000
     bar = 4
@@ -38,7 +38,7 @@ def dump_midi(midi, prefix, charset='utf-8'):
                     'bar': bar, 'notes': v
                 }, f, indent=2)
 
-def load_track(path):
+def loadTrack(path):
     with open(path, 'r') as f:
         ret = json.load(f)
     return ret

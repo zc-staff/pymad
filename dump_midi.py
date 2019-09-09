@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from pymad import dump_midi
+from pymad import dumpMidi
 
 if __name__ == "__main__":
     parser = ArgumentParser('dump_midi', description="dump midi to track json")
@@ -7,4 +7,4 @@ if __name__ == "__main__":
     parser.add_argument('prefix', help='destination prefix to store json')
 
     args = parser.parse_args()
-    dump_midi(args.midi, args.prefix)
+    dumpMidi(args.midi, args.prefix)

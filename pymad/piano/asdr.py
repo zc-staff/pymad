@@ -1,9 +1,23 @@
 import numpy as np
 from math import floor
 
-class LinearASDR(object):
-    def __init__(self, fs, attack=0.1, decay=0.1, sustain=0.5, release=0.1):
-        self.fs = fs
+class GenericASDR(object):
+    def __init__(self, piano):
+        self.piano = piano
+        self.fs = piano.fs
+    
+    def getEnvelope(self, len1):
+        raise NotImplementedError
+    
+    def getNote(self, note, length):
+        env = self.getEnvelope(length)
+        len1 = env.shape[0] / self.fs
+        note = self.piano.getNote(note, len1)
+        return note * env
+
+class LinearASDR(GenericASDR):
+    def __init__(self, piano, attack, decay, sustain, release):
+        super(LinearASDR, self).__init__(piano)
         self.attack = attack
         self.decay = decay
         self.sustain = sustain
