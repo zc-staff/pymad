@@ -36,14 +36,14 @@ class Drum(object):
     def getNote(self, note, length):
         return self.beats[note]
 
-def loadDrum(beatsFile):
-    beats = dict()
-    fs = 44100
-    for k, v in beatsFile.items():
-        t = readWav(v)
-        fs = t.fs
-        beats[k] = t
-    return Drum(fs, beats)
+# def loadDrum(beatsFile):
+#     beats = dict()
+#     fs = 44100
+#     for k, v in beatsFile.items():
+#         t = readWav(v)
+#         fs = t.fs
+#         beats[k] = t
+#     return Drum(fs, beats)
 
 class PianoCache(object):
     def __init__(self, parent):
