@@ -1,7 +1,8 @@
 import numpy as np
 from math import floor
+from .basic import GenericPiano
 
-class GenericASDR(object):
+class GenericASDR(GenericPiano):
     def __init__(self, piano):
         self.piano = piano
         self.fs = piano.fs

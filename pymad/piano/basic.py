@@ -4,7 +4,11 @@ from . import note2pitch
 from .asdr import LinearASDR
 from ..core import sequence, readWav
 
-class BasicPiano(object):
+class GenericPiano(object):
+    def getNote(self, note, length):
+        raise NotImplementedError()
+
+class BasicPiano(GenericPiano):
     def __init__(self, fs, phase=0, pitch_ratio=1, mode='sin'):
         self.fs = fs
         self.phase = phase
@@ -28,7 +32,7 @@ class BasicPiano(object):
             raise NotImplementedError()
         return sequence(t, self.fs)
 
-class Drum(object):
+class Drum(GenericPiano):
     def __init__(self, fs, beats):
         self.fs = 44100
         self.beats = beats
@@ -45,7 +49,7 @@ class Drum(object):
 #         beats[k] = t
 #     return Drum(fs, beats)
 
-class PianoCache(object):
+class PianoCache(GenericPiano):
     def __init__(self, parent):
         self.fs = parent.fs
         self.parent = parent

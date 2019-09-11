@@ -3,7 +3,7 @@ from tqdm import tqdm
 import numpy as np
 from .core import sequence
 
-def synthesize(piano, track, lenRatio=1, speedRatio=1, volRatio=1, quiet=False):
+def synthesize(piano, track, lenRatio=1, speedRatio=1, volRatio=1, quiet=True):
     fs = piano.fs
     wavs = []
     ed_max = 0

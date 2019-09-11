@@ -1,8 +1,9 @@
 from math import log2
 from . import note2pitch
+from .basic import GenericPiano
 from ..dsp import findPitch, repeat2, resample2, filter4
 
-class Sampler(object):
+class Sampler(GenericPiano):
     def __init__(self, x, filter_ratio=4, pitch_ratio=1):
         self.fs = x.fs
         self.data = { 0: x.clone() }
