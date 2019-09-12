@@ -43,3 +43,17 @@ class CacheNode(Node):
             self.getInput()
             self.result = self.doExecute()
         return self.result
+
+class External(Node):
+    def __init__(self, path, env=None, name=None, inputs=None):
+        from .parser import parseNodeList
+        if env != None:
+            path = env.findPath(path)
+        self.obj, self.env = parseNodeList(path)
+        if name != None:
+            self.obj = self.env.nodes[name]
+        if inputs != None:
+            self.obj.inputs.update(inputs)
+    
+    def getNode(self):
+        return self.obj

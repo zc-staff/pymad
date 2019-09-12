@@ -1,8 +1,9 @@
 import os
 import json
+from .basic import External
 from .actor import JsonNode, WavNode, PianoActor
 
-exposes = [ JsonNode, WavNode, PianoActor ]
+exposes = [ JsonNode, WavNode, PianoActor, External ]
 exposesMap = { v.__name__: v for v in exposes }
 
 class Environment(object):

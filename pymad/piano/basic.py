@@ -11,7 +11,7 @@ class GenericPiano(object):
         raise NotImplementedError()
 
 class BasicPiano(GenericPiano):
-    def __init__(self, fs, phase=0, pitch_ratio=1, mode='sin'):
+    def __init__(self, fs=44100, phase=0, pitch_ratio=1, mode='sin'):
         self.fs = fs
         self.phase = phase
         self.pitch_ratio = pitch_ratio
@@ -38,8 +38,8 @@ class BasicPiano(GenericPiano):
         return sequence(t, self.fs)
 
 class Drum(GenericPiano):
-    def __init__(self, fs):
-        self.fs = 44100
+    def __init__(self, fs=44100):
+        self.fs = fs
     
     def load(self, beats, **kwargs):
         self.beats = beats
@@ -50,7 +50,7 @@ class Drum(GenericPiano):
         elif str(note) in self.beats:
             return self.beats[str(note)]
         else:
-            raise KeyError()
+            return sequence(np.array([]), self.fs)
 
 # def loadDrum(beatsFile):
 #     beats = dict()

@@ -27,7 +27,8 @@ class LinearASDR(GenericASDR):
         self.sustain = sustain
         self.release = release
     
-    def getEnvelope(self, len1):
+    def getEnvelope(self, length):
+        len1 = round(length * self.fs)
         len2 = floor(self.fs * self.attack)
         len3 = floor(self.fs * self.decay)
         ret = np.ndarray(len2 + len3, dtype=np.float32)

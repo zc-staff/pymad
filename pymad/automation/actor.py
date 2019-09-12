@@ -1,6 +1,6 @@
 import json
 from .basic import Node
-from .. import piano, readWav, synthesize
+from .. import piano, effect, readWav, synthesize
 
 class Actor(Node):
     def __init__(self, inner, **kwargs):
@@ -42,4 +42,12 @@ class PianoActor(Actor):
     def doExecute(self):
         self.inner.load(**self.param)
         return synthesize(self.inner, self.param['track'], self.lenRatio, self.speedRatio, self.volRatio)
+
+class EffectActor(Actor):
+    def __init__(self, instr, args, **kwargs):
+        inner = getattr(effect, instr)
+        inner = inner(**args)
+        super(EffectActor, self).__init__(inner, **kwargs)
     
+    def doExecute(self):
+        return self.inner.process(self.param)
