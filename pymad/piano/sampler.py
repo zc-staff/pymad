@@ -4,13 +4,15 @@ from .basic import GenericPiano
 from ..dsp import findPitch, repeat2, resample2, filter4
 
 class Sampler(GenericPiano):
-    def __init__(self, x, filter_ratio=4, pitch_ratio=1):
-        self.fs = x.fs
-        self.data = { 0: x.clone() }
-        self.length = x.shape[0] / x.fs
-        self.pitch = findPitch(x)
+    def __init__(self, filter_ratio=4, pitch_ratio=1):
         self.filter_ratio = filter_ratio
         self.pitch_ratio = pitch_ratio
+    
+    def load(self, sample, **kwargs):
+        self.fs = sample.fs
+        self.data = { 0: sample.clone() }
+        self.length = sample.shape[0] / self.fs
+        self.pitch = findPitch(sample)
     
     def upsample(self, n):
         k = 1 if n > 0 else -1

@@ -9,6 +9,9 @@ class GenericASDR(GenericPiano):
     
     def getEnvelope(self, len1):
         raise NotImplementedError
+
+    def load(self, **kwargs):
+        self.piano.load(**kwargs)
     
     def getNote(self, note, length):
         env = self.getEnvelope(length)

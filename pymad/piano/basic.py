@@ -38,8 +38,10 @@ class BasicPiano(GenericPiano):
         return sequence(t, self.fs)
 
 class Drum(GenericPiano):
-    def __init__(self, fs, beats):
+    def __init__(self, fs):
         self.fs = 44100
+    
+    def load(self, beats, **kwargs):
         self.beats = beats
     
     def getNote(self, note, length):
@@ -64,6 +66,10 @@ class PianoCache(GenericPiano):
         self.fs = parent.fs
         self.parent = parent
         self.cache = dict()
+    
+    def load(self, **kwargs):
+        self.parent.load(**kwargs)
+        self.cache.clear()
     
     def getNote(self, note, length):
         if not (note, length) in self.cache:
