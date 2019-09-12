@@ -1,6 +1,6 @@
 import json
 from .basic import Node
-from .. import piano, readWav
+from .. import piano, readWav, synthesize
 
 class Actor(Node):
     def __init__(self, inner, **kwargs):
@@ -18,19 +18,28 @@ class StaticNode(Actor):
         return self.inner
 
 class JsonNode(StaticNode):
-    def __init__(self, path, env, **kwargs):
+    def __init__(self, path, env=None, **kwargs):
         inner = None
-        with open(env.findPath(path), 'r') as fp:
+        if env != None:
+            path = env.findPath(path) 
+        with open(path, 'r') as fp:
             inner = json.load(fp)
         super(JsonNode, self).__init__(inner)
 
 class WavNode(StaticNode):
-    def __init__(self, path, env, **kwargs):
-        super(WavNode, self).__init__(readWav(env.findPath(path)))
+    def __init__(self, path, env=None, **kwargs):
+        if env != None:
+            path = env.findPath(path)
+        super(WavNode, self).__init__(readWav(path))
 
 class PianoActor(Actor):
-    def __init__(self, instr, args, **kwargs):
+    def __init__(self, instr, args, lenRatio=1, speedRatio=1, volRatio=1, **kwargs):
         inner = getattr(piano, instr)
         inner = inner(**args)
         super(PianoActor, self).__init__(inner, **kwargs)
+        self.lenRatio, self.speedRatio, self.volRatio = lenRatio, speedRatio, volRatio
+    
+    def doExecute(self):
+        self.inner.load(**self.param)
+        return synthesize(self.inner, self.param['track'], self.lenRatio, self.speedRatio, self.volRatio)
     

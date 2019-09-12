@@ -4,8 +4,18 @@ class Node(object):
         self.inputs = inputs
         self.param = None
     
+    def doGetInput(self, obj):
+        if isinstance(obj, Node):
+            return obj.execute()
+        elif type(obj) == dict:
+            return { k: self.doGetInput(v) for k, v in obj.items() }
+        elif type(obj) == list:
+            return [ self.doGetInput(v) for v in obj ]
+        else:
+            return obj
+    
     def getInput(self):
-        self.param = { k: v.execute() for k, v in self.inputs }
+        self.param = self.doGetInput(self.inputs)
     
     def getReference(self):
         return self

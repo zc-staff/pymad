@@ -90,7 +90,8 @@ def run():
         raise "failed"
 
     spec = SDL_AudioSpec(fs, AUDIO_F32LSB, 1, 4096, cb)
-    print(SDL_OpenAudio(ctypes.byref(spec), None))
+    if SDL_OpenAudio(ctypes.byref(spec), None) != 0:
+        raise "failed"
     SDL_PauseAudio(0)
 
     window = SDL_CreateWindow(b"Hello World",
