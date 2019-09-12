@@ -2,11 +2,15 @@ class Node(object):
     def __init__(self, inputs, **kwargs):
         self.type = self.__class__.__name__
         self.inputs = inputs
+        self.param = None
     
     def getInput(self):
         self.param = { k: v.execute() for k, v in self.inputs }
     
     def getReference(self):
+        return self
+    
+    def getNode(self):
         return self
     
     def doExecute(self):
@@ -29,15 +33,3 @@ class CacheNode(Node):
             self.getInput()
             self.result = self.doExecute()
         return self.result
-
-class StaticNode(Node):
-    def __init__(self, inner, **kwargs):
-        super(StaticNode, self).__init__(inputs={})
-        self.inner = inner
-    
-    def execute(self):
-        return self.inner
-
-class JsonNode(object):
-    def __init__(self, path):
-        pass

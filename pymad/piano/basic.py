@@ -1,10 +1,12 @@
 import numpy as np
 from math import pi
 from . import note2pitch
-from .asdr import LinearASDR
 from ..core import sequence, readWav
 
 class GenericPiano(object):
+    def load(self, **kwargs):
+        raise NotImplementedError()
+
     def getNote(self, note, length):
         raise NotImplementedError()
 
@@ -14,6 +16,9 @@ class BasicPiano(GenericPiano):
         self.phase = phase
         self.pitch_ratio = pitch_ratio
         self.mode = mode
+    
+    def load(self, **kwargs):
+        pass
 
     def getNote(self, note, length):
         pitch = note2pitch(note) * self.pitch_ratio
@@ -38,7 +43,12 @@ class Drum(GenericPiano):
         self.beats = beats
     
     def getNote(self, note, length):
-        return self.beats[note]
+        if note in self.beats:
+            return self.beats[note]
+        elif str(note) in self.beats:
+            return self.beats[str(note)]
+        else:
+            raise KeyError()
 
 # def loadDrum(beatsFile):
 #     beats = dict()
