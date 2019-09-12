@@ -41,8 +41,8 @@ class Reverb(GenericEffect):
     def rankTest(self, rank, gain, silence=-30):
         return rank * ceil(silence / 20 / log10(gain))
 
-    def __init__(self, mixer, aps=None, cfs=None, mm=None, preset=None):
-        if preset != None:
+    def __init__(self, mixer, aps=None, cfs=None, mm=None, preset='schroeder'):
+        if aps == None:
             aps, cfs, mm = self.PRESETS[preset]
         tot = 0
         for r, g in cfs:

@@ -1,9 +1,9 @@
 import os
 import json
-from .basic import External
-from .actor import JsonNode, WavNode, PianoActor
+from .actor import JsonNode, WavNode, PianoActor, EffectActor
+from .combination import External, Sequential
 
-exposes = [ JsonNode, WavNode, PianoActor, External ]
+exposes = [ JsonNode, WavNode, PianoActor, External, Sequential, EffectActor ]
 exposesMap = { v.__name__: v for v in exposes }
 
 class Environment(object):
@@ -21,11 +21,10 @@ class Environment(object):
         if type(obj) == dict:
             if '__type__' in obj:
                 tp = exposesMap[obj['__type__']]
-                args = self.parseObj(obj['__args__'], True)
-                inputs = {}
+                args = self.parseObj(obj['__args__'], tp.needReference)
+                inputs = None
                 if '__inputs__' in obj:
-                    inputs = obj['__inputs__']
-                    inputs = { k: self.parseObj(v) for k, v in inputs.items() }
+                    inputs = self.parseObj(obj['__inputs__'])
                 ret = tp(env=self, inputs=inputs, **args).getNode()
                 if '__name__' in obj:
                     self.nodes[obj['__name__']] = ret

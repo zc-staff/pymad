@@ -1,8 +1,18 @@
 class Node(object):
-    def __init__(self, inputs, **kwargs):
+    needReference = False
+
+    def __init__(self, inputs=None, **kwargs):
         self.type = self.__class__.__name__
         self.inputs = inputs
         self.param = None
+    
+    def updateInput(self, inputs):
+        if type(self.inputs) == dict:
+            self.inputs.update(inputs)
+        elif type(self.inputs) == list:
+            self.inputs.append(*inputs)
+        else:
+            self.inputs = inputs
     
     def doGetInput(self, obj):
         if isinstance(obj, Node):
@@ -43,17 +53,3 @@ class CacheNode(Node):
             self.getInput()
             self.result = self.doExecute()
         return self.result
-
-class External(Node):
-    def __init__(self, path, env=None, name=None, inputs=None):
-        from .parser import parseNodeList
-        if env != None:
-            path = env.findPath(path)
-        self.obj, self.env = parseNodeList(path)
-        if name != None:
-            self.obj = self.env.nodes[name]
-        if inputs != None:
-            self.obj.inputs.update(inputs)
-    
-    def getNode(self):
-        return self.obj

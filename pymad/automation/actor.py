@@ -3,6 +3,8 @@ from .basic import Node
 from .. import piano, effect, readWav, synthesize
 
 class Actor(Node):
+    needReference = True
+
     def __init__(self, inner, **kwargs):
         super(Actor, self).__init__(**kwargs)
         self.inner = inner

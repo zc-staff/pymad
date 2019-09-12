@@ -10,5 +10,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     piano, _ = parseNodeList(args.piano)
-    piano.inputs['track'] = JsonNode(args.track)
+    piano.updateInput({ "track": JsonNode(args.track) })
     play(piano.execute())
