@@ -14,7 +14,7 @@ def play(seq):
         for i in range(length):
             if pos + i < seq.shape[0]:
                 t = seq[pos + i]
-                stream[2 * i], stream[2 * i + 1] = t[0], t[1]
+                stream[2 * i], stream[2 * i + 1] = t[0], t[-1]
             else:
                 stream[2 * i] = stream[2 * i + 1] = 0
         pos += length
