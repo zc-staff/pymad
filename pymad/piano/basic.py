@@ -22,20 +22,18 @@ class BasicPiano(GenericPiano):
 
     def getHarm(self, r):
         if self.mode == 'sin':
-            return np.array([0, 1])
-        t = np.arange(r)
-        t[0] = 1
+            return np.array([1])
+        t = np.arange(1, 1 + r)
         if self.mode == 'square':
             t = 4 / pi / t
-            t[::2] = 0
+            t[1::2] = 0
             return t
         elif self.mode == 'sawtooth':
             t = -2 / pi / t * (-1.0) ** t
-            t[0] = 0
             return t
         elif self.mode == 'triangle':
             t = 8 / pi / pi / t / t * (-1.0) ** (t // 2)
-            t[::2] = 0
+            t[1::2] = 0
             return t
         else:
             raise NotImplementedError()
@@ -47,7 +45,7 @@ class BasicPiano(GenericPiano):
         
         r = floor(self.fs / pitch / 2)
         r = self.getHarm(r)
-        h = np.arange(r.shape[0])
+        h = np.arange(1, 1 + r.shape[0])
         t = np.sum(r[:, np.newaxis] * np.sin(h[:, np.newaxis] * t[np.newaxis, :] * 2 * pi), axis=0)
 
         return sequence(t, self.fs)
