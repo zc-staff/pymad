@@ -32,8 +32,10 @@ class LinearASDR(GenericASDR):
         len2 = floor(self.fs * self.attack)
         len3 = floor(self.fs * self.decay)
         ret = np.ndarray(len2 + len3, dtype=np.float32)
-        ret[:len2] = np.arange(len2) / len2
-        ret[len2:(len2+len3)] = 1 - (1 - self.sustain) * np.arange(len3) / len3
+        if len2 > 0:
+            ret[:len2] = np.arange(len2) / len2
+        if len2 + len3 > 0:
+            ret[len2:(len2+len3)] = 1 - (1 - self.sustain) * np.arange(len3) / len3
         if len1 > len2 + len3:
             ret = np.pad(ret, (0, len1-len2-len3), constant_values=self.sustain)
         else:

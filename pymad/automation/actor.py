@@ -35,7 +35,7 @@ class WavNode(StaticNode):
         super(WavNode, self).__init__(readWav(path))
 
 class PianoActor(Actor):
-    def __init__(self, instr, args, lenRatio=1, speedRatio=1, volRatio=1, **kwargs):
+    def __init__(self, instr, args={}, lenRatio=1, speedRatio=1, volRatio=1, **kwargs):
         inner = getattr(piano, instr)
         inner = inner(**args)
         super(PianoActor, self).__init__(inner, **kwargs)

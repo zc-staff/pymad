@@ -4,3 +4,4 @@ def note2pitch(note):
 from .basic import BasicPiano, PianoCache, Drum
 from .sampler import Sampler
 from .asdr import LinearASDR
+from .physical import Guitar
