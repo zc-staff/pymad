@@ -1,5 +1,5 @@
 import numpy as np
-from math import pi
+from math import pi, floor
 from . import note2pitch
 from ..core import sequence, readWav
 
@@ -20,21 +20,36 @@ class BasicPiano(GenericPiano):
     def load(self, **kwargs):
         pass
 
+    def getHarm(self, r):
+        if self.mode == 'sin':
+            return np.array([0, 1])
+        t = np.arange(r)
+        t[0] = 1
+        if self.mode == 'square':
+            t = 4 / pi / t
+            t[::2] = 0
+            return t
+        elif self.mode == 'sawtooth':
+            t = -2 / pi / t * (-1.0) ** t
+            t[0] = 0
+            return t
+        elif self.mode == 'triangle':
+            t = 8 / pi / pi / t / t * (-1.0) ** (t // 2)
+            t[::2] = 0
+            return t
+        else:
+            raise NotImplementedError()
+
     def getNote(self, note, length):
         pitch = note2pitch(note) * self.pitch_ratio
         n = round(length * self.fs)
         t = np.arange(n) / self.fs * pitch + self.phase
-        t = t - np.floor(t)
-        if self.mode == 'sin':
-            t = np.sin(2 * pi * t - pi / 2)
-        elif self.mode == 'square':
-            t = np.sign(t - 0.5)
-        elif self.mode == 'sawtooth':
-            t = 2.0 * t - 1.0
-        elif self.mode == 'triangle':
-            t = 1.0 - 4.0 * np.abs(t - 0.5)
-        else:
-            raise NotImplementedError()
+        
+        r = floor(self.fs / pitch / 2)
+        r = self.getHarm(r)
+        h = np.arange(r.shape[0])
+        t = np.sum(r[:, np.newaxis] * np.sin(h[:, np.newaxis] * t[np.newaxis, :] * 2 * pi), axis=0)
+
         return sequence(t, self.fs)
 
 class Drum(GenericPiano):
