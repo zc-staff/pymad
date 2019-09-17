@@ -4,7 +4,7 @@ from .basic import GenericPiano
 from ..dsp import findPitch, repeat2, resample2, filter4
 
 class Sampler(GenericPiano):
-    def __init__(self, filter_ratio=4, pitch_ratio=1):
+    def __init__(self, filter_ratio=8, pitch_ratio=1):
         self.filter_ratio = filter_ratio
         self.pitch_ratio = pitch_ratio
     

@@ -1,9 +1,9 @@
 import os
 import json
 from .actor import JsonNode, WavNode, PianoActor, EffectActor
-from .combination import External, Sequential
+from .combination import External, Sequential, Mixer, MultiTrack
 
-exposes = [ JsonNode, WavNode, PianoActor, External, Sequential, EffectActor ]
+exposes = [ JsonNode, WavNode, PianoActor, External, Sequential, EffectActor, Mixer, MultiTrack ]
 exposesMap = { v.__name__: v for v in exposes }
 
 class Environment(object):
