@@ -8,11 +8,15 @@ class Sampler(GenericPiano):
         self.filter_ratio = filter_ratio
         self.pitch_ratio = pitch_ratio
     
-    def load(self, sample, **kwargs):
+    def load(self, sample, pitch=None, **kwargs):
         self.fs = sample.fs
         self.data = { 0: sample.clone() }
         self.length = sample.shape[0] / self.fs
-        self.pitch = findPitch(sample)
+        if pitch == None:
+            self.pitch = findPitch(sample)
+        else:
+            self.pitch = pitch
+        print(self.pitch)
     
     def upsample(self, n):
         k = 1 if n > 0 else -1
@@ -48,7 +52,7 @@ class Sampler(GenericPiano):
             x = resample2(x, 0.5)
         return x        
     
-    def get_note(self, note, length):
+    def getNote(self, note, length):
         pitch = note2pitch(note) * self.pitch_ratio
         pit = pitch
         len0 = length

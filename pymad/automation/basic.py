@@ -7,6 +7,8 @@ class Node(object):
         self.param = None
     
     def updateInput(self, inputs):
+        if inputs == None:
+            return
         if type(self.inputs) == dict:
             self.inputs.update(inputs)
         elif type(self.inputs) == list:

@@ -5,13 +5,13 @@ from .basic import GenericPiano
 class GenericASDR(GenericPiano):
     def __init__(self, piano):
         self.piano = piano
-        self.fs = piano.fs
     
     def getEnvelope(self, len1):
         raise NotImplementedError
 
     def load(self, **kwargs):
         self.piano.load(**kwargs)
+        self.fs = self.piano.fs
     
     def getNote(self, note, length):
         env = self.getEnvelope(length)
@@ -20,7 +20,7 @@ class GenericASDR(GenericPiano):
         return note * env
 
 class LinearASDR(GenericASDR):
-    def __init__(self, piano, attack, decay, sustain, release):
+    def __init__(self, piano, attack=0, decay=0, sustain=1, release=0):
         super(LinearASDR, self).__init__(piano)
         self.attack = attack
         self.decay = decay
