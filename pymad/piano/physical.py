@@ -1,19 +1,25 @@
 import numpy as np
-from math import floor, pi
+from math import floor, pi, log10, e
 from . import note2pitch
 from .basic import GenericPiano
 
 class Guitar(GenericPiano):
-    def __init__(self, pluck, damping, fs=44100):
+    def __init__(self, pluck, damping, cutoff=None, fs=44100):
         self.fs = fs
         self.h, self.tau = pluck, damping
+        self.cutoff = cutoff
     
     def load(self, **kwargs):
         pass
 
     def getNote(self, note, length):
         pitch = note2pitch(note)
-        n = round(length * self.fs)
+        if self.cutoff == None:
+            n = round(length * self.fs)
+        else:
+            a1 = -2 * pi * pitch * self.tau
+            n = round(self.fs * self.cutoff / 20 / log10(e) / a1)
+        
         t = np.arange(n) / self.fs
         t = t[np.newaxis, :]
 
