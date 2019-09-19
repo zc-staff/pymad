@@ -117,7 +117,7 @@ def resample2(x, ratio):
     o = np.real(ifft(fq1))
     return sequence(o[:m], fs)
 
-def filter4(x, pitch, ratio=4, max_freq=5000):
+def filter4(x, pitch, ratio=4, max_freq=7500):
     "a comb filter, also a low pass filter to cut at max_freq"
     fs = x.fs
     n = x.shape[0]

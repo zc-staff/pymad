@@ -4,7 +4,7 @@ from .basic import GenericPiano
 from ..dsp import findPitch, repeat2, resample2, filter4
 
 class Sampler(GenericPiano):
-    def __init__(self, filter_ratio=8, pitch_ratio=1):
+    def __init__(self, filter_ratio=4, pitch_ratio=1):
         self.filter_ratio = filter_ratio
         self.pitch_ratio = pitch_ratio
     
@@ -50,7 +50,7 @@ class Sampler(GenericPiano):
             x = repeat2(x, 0.5)
         for _ in range(j):
             x = resample2(x, 0.5)
-        return x        
+        return x
     
     def getNote(self, note, length):
         pitch = note2pitch(note) * self.pitch_ratio
