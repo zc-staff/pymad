@@ -40,7 +40,7 @@ class Mixer(Node):
     
     def doExecute(self):
         n = 0
-        ch = 1
+        ch = 0
         fs = 0
         for inp in self.param:
             n = max(n, inp.shape[0])
@@ -49,7 +49,7 @@ class Mixer(Node):
             fs = inp.fs
         
         ret = None
-        if ch > 1:
+        if ch > 0:
             ret = np.zeros((n, ch), dtype=np.float32)
         else:
             ret = np.zeros(n, dtype=np.float32)
@@ -58,7 +58,7 @@ class Mixer(Node):
             volRatio = 0 if self.volRatio == None or len(self.volRatio) <= i else self.volRatio[i]
             volRatio = 10 ** (volRatio / 20)
 
-            if ch > 1 and inp.ndim < 2:
+            if ch > 0 and inp.ndim < 2:
                 inp = inp[:, np.newaxis]
             ret[:inp.shape[0]] += volRatio * inp
         return sequence(ret, fs)

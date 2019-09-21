@@ -1,5 +1,5 @@
 import json
-from mido import MidiFile
+from mido import MidiFile, MidiTrack, MetaMessage, Message
 
 def dumpMidi(midi, prefix, charset='utf-8'):
     midi = MidiFile(midi, charset=charset)
@@ -37,6 +37,26 @@ def dumpMidi(midi, prefix, charset='utf-8'):
                     'bpm': 60000000.0 / tempo,
                     'bar': bar, 'notes': v
                 }, f, indent=2)
+
+def writeMidi(track):
+    mid = MidiFile()
+    midiTrack = MidiTrack()
+    mid.tracks.append(midiTrack)
+    tpb = mid.ticks_per_beat
+
+    midiTrack.append(MetaMessage('set_tempo', tempo=round(60000000.0 / track['bpm'])))
+    midiTrack.append(MetaMessage('time_signature', numerator=track['bar']))
+    events = [ ('note_on', n['note'], n['offset']) for n in track['notes'] ]
+    events.extend( ('note_off', n['note'], n['offset'] + n['length']) for n in track['notes'] )
+    events.sort(key=lambda x: x[2])
+    now = 0
+
+    for e in events:
+        time = round((e[2] - now) * tpb)
+        midiTrack.append(Message(e[0], note=int(e[1]), velocity=127, time=time))
+        now = e[2]
+
+    return mid
 
 def loadTrack(path):
     with open(path, 'r') as f:
