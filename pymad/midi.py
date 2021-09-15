@@ -11,7 +11,7 @@ def dumpMidi(midi, prefix, charset='utf-8'):
         keys = dict()
         now = 0.0
         for m in t:
-            now += m.time / midi.ticks_per_beat
+            now += m.time
             if m.type == 'set_tempo':
                 tempo = m.tempo
             elif m.type == 'time_signature':
@@ -23,12 +23,17 @@ def dumpMidi(midi, prefix, charset='utf-8'):
                 outs[ch] = list()
                 keys[ch] = dict()
             if m.type == 'note_off' or m.velocity == 0:
-                st = keys[ch][m.note]
-                # pitch = 440 * (2 ** ((m.note - 69) / 12))
-                note = { "offset": st, "note": m.note, "length": now - st }
-                outs[ch].append(note)
-                keys[ch].pop(m.note)
+                if m.note in keys[ch]:
+                    st = keys[ch][m.note]
+                    if now - st > 0.01 * midi.ticks_per_beat:
+                        note = { "offset": st / midi.ticks_per_beat, "note": m.note, "length": (now - st) / midi.ticks_per_beat }
+                        outs[ch].append(note)
+                        keys[ch].pop(m.note)
             else:
+                if m.note in keys[ch]:
+                    st = keys[ch][m.note]
+                    note = { "offset": st / midi.ticks_per_beat, "note": m.note, "length": (now - st) / midi.ticks_per_beat }
+                    outs[ch].append(note)
                 keys[ch][m.note] = now
         for ch, v in outs.items():
             path = prefix + '-' + str(idx) + '-' + str(ch) + '.json'

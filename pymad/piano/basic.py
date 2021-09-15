@@ -86,5 +86,5 @@ class PianoCache(GenericPiano):
     
     def getNote(self, note, length):
         if not (note, length) in self.cache:
-            self.cache[(note, length)] = self.parent.get_note(note, length)
+            self.cache[(note, length)] = self.parent.getNote(note, length)
         return self.cache[(note, length)]

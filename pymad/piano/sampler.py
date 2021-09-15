@@ -16,7 +16,6 @@ class Sampler(GenericPiano):
             self.pitch = findPitch(sample)
         else:
             self.pitch = pitch
-        print(self.pitch)
     
     def upsample(self, n):
         k = 1 if n > 0 else -1
